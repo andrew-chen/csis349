@@ -18,6 +18,7 @@ class SequenceNumber(object):
 			self.value = self.value + 1
 		else:
 			self.value = 0
+		return self
 	def decr(self):
 		if self.value == 0:
 			self.value = self.max
@@ -32,6 +33,18 @@ class SequenceNumber(object):
 		result = self.copy()
 		result.value = (1 - result.value)
 		return result
+	def between(self,a,c):
+		"Return true if a <= b < c circularly; false otherwise"
+		a,b,c = a.value,self.value,c.value
+		if (
+			((a <= b) and (b < c)) or
+			((c < a) and (a <= b)) or
+			((b < c) and (c < a))
+			):
+			return True
+		else:
+			return False
+
 
 class Packet(object):
 	def __init__(self,data=""):
@@ -45,6 +58,8 @@ nak = "nak"
 timeout = "timeout"
 frame_arrival = "frame arrival"
 network_layer_ready = "network layer ready"
+
+cksum_err = "checksum error"
 
 counter = 0
 
@@ -69,6 +84,8 @@ class ProtocolStack(object):
 		self.received_frames = []
 		self.counter = 0
 		self.network_layer_enabled = False
+		self.report_checksum_errors = False
+
 	def wait_for_event(self):
 		while True:
 			# timeout stuff
@@ -82,6 +99,7 @@ class ProtocolStack(object):
 				if time.time() - value > self.timeout_amount:
 					self.event_queue.append(timeout)
 					del self.timers[key]
+					self.oldest_frame = key
 
 			# put network_layer_ready event in queue
 			# if the queue is empty
@@ -100,7 +118,7 @@ class ProtocolStack(object):
 
 	def from_network_layer(self,p):
 		i,c = (id(self),str(self.counter))
-		print " "*(i%11)+c+" "*11+" send"
+		print " "*(i%11)+c+" "*11+" create"
 		p.data = (i,c)
 		self.counter = self.counter + 1
 
@@ -119,11 +137,16 @@ class ProtocolStack(object):
 		try:
 			if random.random() > self.phys_drop_prob:
 				self.physical_connection.receive_frame(s)
+			else:
+				if self.report_checksum_errors:
+					self.physical_connection.checksum_error()
 		except:
 			sys.exit("no physical connection")
 	def receive_frame(self,s):
 		self.event_queue.append(frame_arrival)
 		self.received_frames.append(s)
+	def checksum_error(self):
+		self.event_queue.append(cksum_err)
 
 	def start_timer(self,k):
 		self.timers[k] = time.time()
