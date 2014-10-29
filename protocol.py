@@ -13,6 +13,9 @@ class SequenceNumber(object):
 	def __eq__(self,other):
 		assert(self.max == other.max)
 		return (self.value == other.value)
+	def __neq__(self,other):
+		assert(self.max == other.max)
+		return (self.value != other.value)
 	def inc(self):
 		if self.value < self.max:
 			self.value = self.value + 1
@@ -56,6 +59,8 @@ ack = "ack"
 nak = "nak"
 
 timeout = "timeout"
+ack_timeout = "ack_timeout"
+
 frame_arrival = "frame arrival"
 network_layer_ready = "network layer ready"
 
@@ -91,7 +96,7 @@ class ProtocolStack(object):
 			# timeout stuff
 			try:
 				if time.time() - self.ack_timer > self.timeout_amount:
-					self.event_queue.append(timeout)
+					self.event_queue.append(ack_timeout)
 					del self.ack_timer
 			except:
 				pass
