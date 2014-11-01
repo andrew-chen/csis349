@@ -58,7 +58,20 @@ data = "data"
 ack = "ack"
 nak = "nak"
 
+class Timeout(object):
+	def __init__(self,value):
+		self.value = value
+	def __eq__(self,other):
+		if other == "timeout":
+			return True
+		if isinstance(other,Timeout):
+			return self.value == other.value
+		return False
+	def __str__(self):
+		return "protocol.Timeout("+str(self.value)+")"
+
 timeout = "timeout"
+
 ack_timeout = "ack_timeout"
 
 frame_arrival = "frame arrival"
@@ -90,21 +103,23 @@ class ProtocolStack(object):
 		self.counter = 0
 		self.network_layer_enabled = False
 		self.report_checksum_errors = False
+		self.ack_timers = []
 
 	def wait_for_event(self):
 		while True:
 			# timeout stuff
-			try:
-				if time.time() - self.ack_timer > self.timeout_amount:
+			new_ack_timers = []
+			for ack_timer in self.ack_timers:
+				if time.time() - ack_timer > self.timeout_amount:
 					self.event_queue.append(ack_timeout)
-					del self.ack_timer
-			except:
-				pass
+				else:
+					new_ack_timers.append(ack_timer)
+			self.ack_timers = new_ack_timers
+					
 			for key,value in self.timers.items():
 				if time.time() - value > self.timeout_amount:
-					self.event_queue.append(timeout)
+					self.event_queue.append(Timeout(key))
 					del self.timers[key]
-					self.oldest_frame = key
 
 			# put network_layer_ready event in queue
 			# if the queue is empty
@@ -119,17 +134,21 @@ class ProtocolStack(object):
 				self.event_queue = self.event_queue[1:]
 				return result
 			else:
-				time.sleep(1)
+				time.sleep(0.1)
+	def println(self,s):
+		i = id(self)
+		print " "*(i%11)+str(s)
+		
 
 	def from_network_layer(self,p):
-		i,c = (id(self),str(self.counter))
-		print " "*(i%11)+c+" "*11+" create"
-		p.data = (i,c)
+		c = str(self.counter)
+		self.println(c+" "*11+" create")
+		p.data = (id(self),c)
 		self.counter = self.counter + 1
 
 	def to_network_layer(self,p):
 		i,c = p.data
-		print " "*(i%11)+c+" "*11+" receive"
+		self.println(c+" "*11+" receive")
 
 	def from_physical_layer(self):
 		while 0 == len(self.received_frames):
@@ -163,13 +182,10 @@ class ProtocolStack(object):
 			pass
 
 	def start_ack_timer(self):
-		self.ack_timer = time.time()
+		self.ack_timers.append(time.time())
 
 	def stop_ack_timer(self):
-		try:
-			del self.ack_timer
-		except:
-			pass
+		self.ack_timers = []
 
 	def enable_network_layer(self):
 		self.network_layer_enabled = True
