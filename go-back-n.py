@@ -3,18 +3,6 @@ import threading
 
 MAX_SEQ = 7
 
-def between(a,b,c):
-	"Return true if a <= b < c circularly; false otherwise"
-	a,b,c = a.value,b.value,c.value
-	if (
-		((a <= b) and (b < c)) or
-		((c < a) and (a <= b)) or
-		((b < c) and (c < a))
-		):
-		return True
-	else:
-		return False
-
 def send_data(frame_nr,frame_expected,buffer,ps):
 	s = protocol.Frame()
 	s.info = buffer[frame_nr.value]
@@ -45,7 +33,7 @@ def protocol5(ps):
 			if r.seq == frame_expected:
 				ps.to_network_layer(r.info)
 				frame_expected.inc()
-			while (between(ack_expected,r.ack,next_frame_to_send)):
+			while (r.ack.between(ack_expected,next_frame_to_send)):
 				nbuffered = nbuffered-1
 				ps.stop_timer(ack_expected.value)
 				ack_expected.inc()
