@@ -52,27 +52,30 @@ class State(object):
 			yield curr
 			curr = curr.predecessor		
 
-def shortest_path(s,t,dist):
-	# we don't have to go anywhere if we're already there
-	if (s==t): return []
-
+def dijkstra(s,dist):
 	# infer values of .index from the keys of dist
 	index_values = sorted(reduce(lambda x,y: x.union(y),map(set,dist.keys())))
 	assert(s in index_values)
-	assert(t in index_values)
 
 	# get our states
 	state = [State(i) for i in index_values]
 
-	# record about where we are starting from
-	t_node = state[t]
-	t_node.length = 0
-	t_node.fix()
-	current_node = t_node
-
+	assert(len(index_values) > 1)
+	
 	s_node = state[s]
-	# while we haven't yet reached where we want to go
-	while (current_node != s_node):
+	s_node.length = 0
+	s_node.fix()
+
+	current_index = 0
+	while True:
+		if current_index == s:
+			current_index = current_index + 1
+		else:
+			break
+
+	current_node = state[s]
+
+	for something in range(len(index_values)-1):
 		# for each node
 		for a_node in state:
 			# figure out the distance from the current node to each node
@@ -102,9 +105,13 @@ def shortest_path(s,t,dist):
 
 		current_node.fix()
 
-	# we found the shortest path to where we want to go, so we stop
-
 	# figure out the path, starting at s, and then following predecessors
-	return [node.index for node in state[s].predecessors()]
+	return {t : [node.index for node in state[t].predecessors()] for t in index_values}
+
+
+def shortest_path(s,t,dist):
+	result = dijkstra(s,dist)
+	print result
+	return dijkstra(s,dist)[t]
 
 print (shortest_path(3,2,dist))
