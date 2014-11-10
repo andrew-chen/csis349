@@ -60,6 +60,7 @@ def dijkstra(s,dist):
 	# get our states
 	state = [State(i) for i in index_values]
 
+	print(s,dist)
 	assert(len(index_values) > 1)
 	
 	s_node = state[index_values.index(s)]
@@ -107,7 +108,7 @@ def dijkstra(s,dist):
 		current_node.fix()
 
 	# figure out the path, starting at s, and then following predecessors
-	return {t : [node.index for node in state[index_values.index(t)].predecessors()] for t in index_values}
+	return {t : list(reversed([node.index for node in state[index_values.index(t)].predecessors()])) for t in index_values}
 
 
 def shortest_path(s,t,dist):
