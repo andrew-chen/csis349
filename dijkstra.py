@@ -62,24 +62,20 @@ def dijkstra(s,dist):
 
 	assert(len(index_values) > 1)
 	
-	s_node = state[s]
+	s_node = state[index_values.index(s)]
 	s_node.length = 0
 	s_node.fix()
 
-	current_index = 0
-	while True:
-		if current_index == s:
-			current_index = current_index + 1
-		else:
-			break
-
-	current_node = state[s]
+	current_node = state[index_values.index(s)]
 
 	for something in range(len(index_values)-1):
 		# for each node
 		for a_node in state:
 			# figure out the distance from the current node to each node
-			current_distance = dist[(current_node.index,a_node.index)]
+			try:
+				current_distance = dist[(current_node.index,a_node.index)]
+			except KeyError:
+				current_distance = float("inf")
 
 			# if we're already at zero, we don't need to worry about this one
 			if current_distance == 0: continue
@@ -93,7 +89,12 @@ def dijkstra(s,dist):
 			# consider the distance to each node through the current node
 			# will going through the current node help us?
 			# if not, skip it
-			if new_distance >= a_node.length: continue
+			if new_distance >= a_node.length:
+				continue
+
+			# if we're still at infinity, we should skip it too
+			if new_distance == infinity:
+				continue
 
 			# otherwise
 			# update the distance to each node and indicate the current node as the predecessor of that
@@ -106,7 +107,7 @@ def dijkstra(s,dist):
 		current_node.fix()
 
 	# figure out the path, starting at s, and then following predecessors
-	return {t : [node.index for node in state[t].predecessors()] for t in index_values}
+	return {t : [node.index for node in state[index_values.index(t)].predecessors()] for t in index_values}
 
 
 def shortest_path(s,t,dist):
@@ -114,4 +115,6 @@ def shortest_path(s,t,dist):
 	print result
 	return dijkstra(s,dist)[t]
 
-print (shortest_path(3,2,dist))
+if __name__ == "__main__":
+	print (shortest_path(3,2,dist))
+
