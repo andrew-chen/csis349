@@ -4,6 +4,7 @@
 """
 import math
 import itertools
+import sys
 
 # Chapter 1
 
@@ -102,10 +103,76 @@ def same(x,y):
 	else:
 		return not y
 
+def xor(x,y):
+	if x:
+		if y: return 0
+		return 1
+	if y: return 1
+	return 0
+
 def Hamming_distance(a,b):
 	assert(len(a) == len(b))
-	# USE zip() HERE
-	# WORK HERE
+	def xor_of_pair(x):
+		a,b = x
+		return xor(a,b)
+	return sum(map(xor_of_pair,zip(a,b)))
+
+def minimum_number_of_Hamming_code_check_bits(m):
+	"m <= 2**r - r - 1"
+	# return r
+	r = 2
+	while m > (2**r - r - 1):
+		r = r + 1
+	return r
+
+def powers_of(x):
+	yield 1
+	yield x
+	y = x*x
+	while True:
+		yield y
+		y = y*x
+
+def is_power_of(x,y):
+	powers = power_of(y)
+	w = next(powers)
+	while x > w:
+		w = next(powers)
+	if x < y: return False
+	if x == y: return True
+	sys.exit("should not get here in is_power_of")
+		
+def as_set_that_would_be_sum_of_powers_of_two(n):
+	powers = powers_of(2)
+	n = int(n)
+	result = []
+	for possibility in powers:
+		if possibility > n:
+			return
+		if n%(2*possibility) != 0:
+			yield possibility
+			n = n - possibility
+	
+class HammingCode(object):
+	def __init__(self,number_of_message_bits):
+		self.number_of_message_bits = number_of_message_bits
+		self.number_of_check_bits = minimum_number_of_Hamming_code_check_bits(number_of_message_bits)
+		self.table = {}
+		check_bit_count = 0
+		message_bit_count = 0
+		for position in range(1,number_of_message_bits+1):
+			if is_power_of(position,2):
+				self.table[position] = "check"
+				check_bit_count = check_bit_count + 1
+			else:
+				self.table[position] = "message"
+				message_bit_count = message_bit_count + 1
+
+def Hamming_encode(x):
+	pass
+
+def Hamming_decode(x):
+	pass
 
 # Chapter 4
 
@@ -118,9 +185,20 @@ def Hamming_distance(a,b):
 # tests
 
 if __name__ == "__main__":
-	sequence = [1,0]
-	f = Fourier(sequence,2*math.pi)
-	print next(f)
-	print next(f)
-	print next(f)
-	print next(f)
+	print "begin tests"
+	if False:
+		sequence = [1,0]
+		f = Fourier(sequence,2*math.pi)
+		print next(f)
+		print next(f)
+		print next(f)
+		print next(f)
+	if False:
+		print Hamming_distance([0,0,0,0],[1,1,1,1])
+		print Hamming_distance([0,1,0,1],[0,1,0,1])
+	if True:
+		print "testing stuff related to Hamming code"
+		print "7 = sum of "+str(list(as_set_that_would_be_sum_of_powers_of_two(7)))
+		print "9 = sum of "+str(list(as_set_that_would_be_sum_of_powers_of_two(9)))
+		print "10 = sum of "+str(list(as_set_that_would_be_sum_of_powers_of_two(10)))
+	print "end tests"
