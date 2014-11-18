@@ -5,6 +5,7 @@
 import math
 import itertools
 import sys
+import pprint
 
 # Chapter 1
 
@@ -134,12 +135,12 @@ def powers_of(x):
 		y = y*x
 
 def is_power_of(x,y):
-	powers = power_of(y)
+	powers = powers_of(y)
 	w = next(powers)
 	while x > w:
 		w = next(powers)
-	if x < y: return False
-	if x == y: return True
+	if x < w: return False
+	if x == w: return True
 	sys.exit("should not get here in is_power_of")
 		
 def as_set_that_would_be_sum_of_powers_of_two(n):
@@ -153,6 +154,15 @@ def as_set_that_would_be_sum_of_powers_of_two(n):
 			yield possibility
 			n = n - possibility
 	
+def parity(a_list):
+	x = 0
+	for item in a_list:
+		if item:
+			x = 1 - x
+		else:
+			pass
+	return x
+
 class HammingCode(object):
 	def __init__(self,number_of_message_bits):
 		self.number_of_message_bits = number_of_message_bits
@@ -160,19 +170,41 @@ class HammingCode(object):
 		self.table = {}
 		check_bit_count = 0
 		message_bit_count = 0
-		for position in range(1,number_of_message_bits+1):
+		self.total_bit_count = self.number_of_message_bits + self.number_of_check_bits
+		for position in range(1,self.total_bit_count+1):
 			if is_power_of(position,2):
-				self.table[position] = "check"
+				self.table[position] = ("check",[])
 				check_bit_count = check_bit_count + 1
 			else:
-				self.table[position] = "message"
+				self.table[position] = ("message",list(as_set_that_would_be_sum_of_powers_of_two(position)))
 				message_bit_count = message_bit_count + 1
+		assert(check_bit_count == self.number_of_check_bits)
+		assert(message_bit_count == self.number_of_message_bits)
+		for position in range(1,self.total_bit_count+1):
+			bit_type,a_list = self.table[position]
+			for item in a_list:
+				self.table[item][1].append(position)
 
-def Hamming_encode(x):
-	pass
-
-def Hamming_decode(x):
-	pass
+	def encode(self,message):
+		assert(len(message) == self.number_of_message_bits)
+		result = [None for item in range(self.total_bit_count+1)]
+		message_bit_count = 0
+		for position in range(1,self.total_bit_count+1):
+			bit_type, a_list = self.table[position]
+			if bit_type == "message":
+				result[position] = message[message_bit_count]
+				message_bit_count = message_bit_count + 1
+		for position in range(1,self.total_bit_count+1):
+			bit_type, a_list = self.table[position]
+			if bit_type == "check":
+				p = parity([result[item] for item in a_list])
+				result[position] = p
+				# TEST NEXT TIME
+				
+		return result[1:]
+				
+	def decode(self,encoded_message):
+		pass
 
 # Chapter 4
 
@@ -196,9 +228,17 @@ if __name__ == "__main__":
 	if False:
 		print Hamming_distance([0,0,0,0],[1,1,1,1])
 		print Hamming_distance([0,1,0,1],[0,1,0,1])
-	if True:
+	if False:
 		print "testing stuff related to Hamming code"
 		print "7 = sum of "+str(list(as_set_that_would_be_sum_of_powers_of_two(7)))
 		print "9 = sum of "+str(list(as_set_that_would_be_sum_of_powers_of_two(9)))
 		print "10 = sum of "+str(list(as_set_that_would_be_sum_of_powers_of_two(10)))
+	if True:
+		hc = HammingCode(7)
+		print hc.number_of_check_bits
+		pprint.pprint( hc.table )
+		print hc.encode([0,0,0,0,0,0,0])
+		print hc.encode([1,1,1,1,1,1,1])
+		print hc.encode([0,1,1,1,1,1,1])
+		print hc.encode([0,1,1,1,1,1,0])
 	print "end tests"
