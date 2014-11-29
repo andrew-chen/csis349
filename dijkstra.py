@@ -29,7 +29,7 @@ tentative = "tentative"
 permanent = "permanent"
 infinity = float("inf") # INFINITY
 
-class State(object):
+class Node(object):
 	# the initializer
 	def __init__(self,the_index):
 		self.predecessor = None
@@ -58,7 +58,7 @@ def dijkstra(s,dist):
 	assert(s in index_values)
 
 	# get our states
-	state = [State(i) for i in index_values]
+	state = [Node(i) for i in index_values]
 
 	print(s,dist)
 	assert(len(index_values) > 1)
