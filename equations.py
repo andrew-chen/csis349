@@ -6,6 +6,7 @@ import math
 import itertools
 import sys
 import pprint
+import collections
 
 # Chapter 1
 
@@ -163,6 +164,18 @@ def parity(a_list):
 			pass
 	return x
 
+def bits_to_num(a_list):
+	result = 0
+	for item in a_list:
+		result = result * 2
+		result = result + item
+	return result
+
+def prepend_zero(a_list):
+	result = [0]
+	result[1:] = a_list
+	return result
+
 class HammingCode(object):
 	def __init__(self,number_of_message_bits):
 		self.number_of_message_bits = number_of_message_bits
@@ -199,12 +212,43 @@ class HammingCode(object):
 			if bit_type == "check":
 				p = parity([result[item] for item in a_list])
 				result[position] = p
-				# TEST NEXT TIME
-				
 		return result[1:]
 				
-	def decode(self,encoded_message):
-		pass
+	def _separate_message_from_check(self,encoded_message):
+		message_bits = []
+		check_bits = []
+		encoded_message = prepend_zero(encoded_message)
+		for position in range(1,self.total_bit_count+1):
+			bit_type, a_list = self.table[position]
+			if bit_type == "check":
+				check_bits.append(encoded_message[position])
+			if bit_type == "message":
+				message_bits.append(encoded_message[position])
+		return (message_bits,check_bits)
+	def decode(self,encoded_message,verbose=False):
+		# check the length
+		assert(len(encoded_message) == self.total_bit_count)
+		# check the contents
+		for item in encoded_message:
+			assert( item in [0,1] )
+
+		message,check = self._separate_message_from_check(encoded_message)
+		# now calculate what the parity bits should be
+		should_be = self.encode(message)
+		if verbose: print ("got_this_",encoded_message)
+		if verbose: print ("should_be",should_be)
+		message,ideal_check = self._separate_message_from_check(should_be)
+		# now compare them with what we actually got
+		to_change = bits_to_num(reversed([xor(x,y) for x,y in zip(check,ideal_check)]))
+
+		possible_encoded_message = prepend_zero(encoded_message)
+		if verbose: print ("to_change",to_change)
+		possible_encoded_message[to_change] = 1 - possible_encoded_message[to_change]
+		if verbose: print ("after_chg",possible_encoded_message[1:])
+		
+		# now extract out the message
+		message,check = self._separate_message_from_check(possible_encoded_message[1:])
+		return message
 
 # Chapter 4
 
@@ -241,4 +285,9 @@ if __name__ == "__main__":
 		print hc.encode([1,1,1,1,1,1,1])
 		print hc.encode([0,1,1,1,1,1,1])
 		print hc.encode([0,1,1,1,1,1,0])
+		c = hc.encode([0,1,0,1,0,1,0])
+		print c
+		print hc.decode(c)
+		c[2] = 1 - c[2]
+		print hc.decode(c)
 	print "end tests"
