@@ -117,7 +117,7 @@ def Hamming_distance(a,b):
 	def xor_of_pair(x):
 		a,b = x
 		return xor(a,b)
-	return sum(map(xor_of_pair,zip(a,b)))
+	return sum( [xor(x,y) for x,y in zip(a,b)])
 
 def minimum_number_of_Hamming_code_check_bits(m):
 	"m <= 2**r - r - 1"
@@ -269,7 +269,7 @@ if __name__ == "__main__":
 		print next(f)
 		print next(f)
 		print next(f)
-	if False:
+	if True:
 		print Hamming_distance([0,0,0,0],[1,1,1,1])
 		print Hamming_distance([0,1,0,1],[0,1,0,1])
 	if False:
@@ -277,7 +277,7 @@ if __name__ == "__main__":
 		print "7 = sum of "+str(list(as_set_that_would_be_sum_of_powers_of_two(7)))
 		print "9 = sum of "+str(list(as_set_that_would_be_sum_of_powers_of_two(9)))
 		print "10 = sum of "+str(list(as_set_that_would_be_sum_of_powers_of_two(10)))
-	if True:
+	if False:
 		hc = HammingCode(7)
 		print hc.number_of_check_bits
 		pprint.pprint( hc.table )
